@@ -40,7 +40,7 @@ card_values = {"2C": 2, "2D": 2, "2H": 2, "2S": 2,
                "JC": 10, "JD": 10, "JH": 10, "JS": 10,
                "QC": 10, "QD": 10, "QH": 10, "QS": 10,
                "KC": 10, "KD": 10, "KH": 10, "KS": 10,
-               "AC": 10, "AD": 10, "AH": 10, "AS": 10, "Unknown": 0
+               "AC": 11, "AD": 11, "AH": 11, "AS": 11, "Unknown": 0
                }
 
 cards = list(all_cards)
@@ -73,24 +73,36 @@ def calculate_score(cards, card_values):
     values = []
     for card in cards:
         values.append(card_values.get(card))
-    if sum(values) == 21 and len(values) == 2:
-        return 0
-    if 11 in values and sum(values) > 21:
-        values[values.index(11)] = 1
+    if 11 in values:
+        for value in values:
+            if sum(values) > 21 and value == 11:
+                values[values.index(value)] = 1
     return sum(values)
 
 
-def result(user_score, dealer_score):
+def result(user_score, dealer_score, user_cards, dealer_cards):
     """Compares scores and returns winner on the screen"""
     global bank
-    if user_score == dealer_score:
+    if user_score == 21 and len(user_cards) == 2:
+        if dealer_score == 21 and len(dealer_score) == 2:
+            winner = "Draw - BlackJacks"
+            color = (0, 0, 255)
+        else:
+            winner = "You have BlackJack!"
+            color = (0, 255, 0)
+            bank += bet
+    elif dealer_score == 21 and len(dealer_cards) == 2:
+        winner = "Dealer has BlackJack!"
+        color = (255, 0, 0)
+        bank -= bet
+    elif user_score == dealer_score:
         winner = "Draw"
         color = (0, 0, 255)
-    elif user_score == 0 or dealer_score > 21:
+    elif dealer_score > 21:
         winner = "You have won!"
         color = (0, 255, 0)
         bank += bet
-    elif dealer_score == 0 or user_score > 21:
+    elif user_score > 21:
         winner = "You have lost!"
         color = (255, 0, 0)
         bank -= bet
@@ -198,6 +210,7 @@ def main():
             else:
                 dealer_cards.append("Unknown")
                 unknown = deal_card(cards)
+            dealer_score = calculate_score(dealer_cards, card_values)
             draw_gamestate(user_score, dealer_score)
             p.display.flip()
             time.sleep(0.6)
@@ -246,7 +259,7 @@ def main():
                             time.sleep(0.5)
                         running = False
         screen.fill(p.Color("black"))
-        result(user_score, dealer_score)
+        result(user_score, dealer_score, user_cards, dealer_cards)
         draw_gamestate(user_score, dealer_score)
         p.display.flip()
 
